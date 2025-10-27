@@ -109,15 +109,26 @@ function initPostLoginElements() {
   fetchDataButton = document.getElementById("fetchDataButton");
   sendDealButton = document.getElementById("sendDealButton");
   fetchWordDataButton = document.getElementById("fetchWordData");
+  fetchSectionDataButton = document.getElementById("fetchSectionData");
 
   fetchWordDataHandler = async () => {
-    // Use the existing isApiCallInProgress flag from your handleSendDeal function
     if (isApiCallInProgress) return;
 
     try {
       await getWordData();
     } catch (error) {
-      console.error("Error in sendDealButtonHandler:", error);
+      console.error("Error in fethcWordDataButtonHandler:", error);
+    }
+  };
+
+  //function to fetch the data from deal driver of section and disclosure column
+  fetchSectionDataHandler = async () => {
+    if (isApiCallInProgress) return;
+
+    try {
+      await getSectionData();
+    } catch (error) {
+      console.error("Error in fetchSectionDataButtonHandler:", error);
     }
   };
   // Define the send deal handler function
@@ -186,6 +197,12 @@ function initPostLoginElements() {
       fetchWordDataButton.removeEventListener("click", getWordData);
     }
     fetchWordDataButton.addEventListener("click", getWordData);
+  }
+  if (fetchSectionDataButton) {
+    if (fetchSectionDataHandler) {
+      fetchSectionDataButton.removeEventListener("click", getSectionData);
+    }
+    fetchSectionDataButton.addEventListener("click", getSectionData);
   }
 
   // Show main content
@@ -389,7 +406,9 @@ async function handleSendDeal() {
       "CREATE_REPRESENTATION_WARRANTY",
       "CREATE_REVISED_CLOSING_CHECKLIST",
     ];
-    const areaPermissions = permissionArray.filter((permission) => requiredPermissions.includes(permission));
+    const areaPermissions = permissionArray.filter((permission) =>
+      requiredPermissions.includes(permission)
+    );
 
     const dealUuid = matchedDeal.deal[0].uuid;
     localStorage.setItem("selectedDealId", dealUuid);
@@ -624,7 +643,15 @@ function getBaseUrlForEnvironment(env) {
 //   }
 // }
 
-async function sendCategoryData(dealUuid, tenantId, environment, permissions, category, dealName, showMessage) {
+async function sendCategoryData(
+  dealUuid,
+  tenantId,
+  environment,
+  permissions,
+  category,
+  dealName,
+  showMessage
+) {
   try {
     // Properly parse the localStorage data
     const data = localStorage.getItem("categoryData");
@@ -688,15 +715,55 @@ async function sendCategoryData(dealUuid, tenantId, environment, permissions, ca
 }
 
 // Keep the original functions for backward compatibility
-async function sendClosingData(dealUuid, tenantId, environment, permissions, category, dealName, showMessage) {
-  return sendCategoryData(dealUuid, tenantId, environment, permissions, category, dealName, showMessage);
+async function sendClosingData(
+  dealUuid,
+  tenantId,
+  environment,
+  permissions,
+  category,
+  dealName,
+  showMessage
+) {
+  return sendCategoryData(
+    dealUuid,
+    tenantId,
+    environment,
+    permissions,
+    category,
+    dealName,
+    showMessage
+  );
 }
 
-async function sendPostClosingData(dealUuid, tenantId, environment, permissions, category, dealName, showMessage) {
-  return sendCategoryData(dealUuid, tenantId, environment, permissions, category, dealName, showMessage);
+async function sendPostClosingData(
+  dealUuid,
+  tenantId,
+  environment,
+  permissions,
+  category,
+  dealName,
+  showMessage
+) {
+  return sendCategoryData(
+    dealUuid,
+    tenantId,
+    environment,
+    permissions,
+    category,
+    dealName,
+    showMessage
+  );
 }
 
-async function sendRepresentationData(dealUuid, tenantId, environment, permissions, category, dealName, showMessage) {
+async function sendRepresentationData(
+  dealUuid,
+  tenantId,
+  environment,
+  permissions,
+  category,
+  dealName,
+  showMessage
+) {
   console.log("THis is the category: ", window.categoryData);
   const repsAndWarrantyData = localStorage.getItem("categoryData");
   console.log("THis is repsWarranty data: ", repsAndWarrantyData);
@@ -775,6 +842,7 @@ class DataFetcher {
       },
       closing: {
         apiEndpoint: "https://dealdriverapi.drapcode.co/getClosingData",
+        // apiEndpoint: "http://localhost:3002/getClosingData",
         dataKey: "closing",
         storageKey: "lastClosingApiResponse",
         oldDataKey: "fetchedOldClosingData",
@@ -872,7 +940,8 @@ class DataFetcher {
     console.log(`Fetch ${this.dataType} data function triggered`);
 
     try {
-      const { selectedDealName, environment, loginResponseDataString } = this.validateRequirements();
+      const { selectedDealName, environment, loginResponseDataString } =
+        this.validateRequirements();
       const localData = this.getLocalData();
       const dealUuid = this.getDealUuid(loginResponseDataString, selectedDealName);
 
@@ -915,7 +984,8 @@ class DataFetcher {
     if (!contentArea) return;
 
     if (!response.success || !response.data) {
-      contentArea.innerHTML = '<div style="color:#dc3545;padding:4px 0;font-size:13px;">Error loading data</div>';
+      contentArea.innerHTML =
+        '<div style="color:#dc3545;padding:4px 0;font-size:13px;">Error loading data</div>';
       return;
     }
 
@@ -1084,12 +1154,16 @@ class DataFetcher {
 
     const pushDeleted = (start, end) => {
       for (let k = start; k < end; k++) {
-        oldOut.push(`<span style="text-decoration:line-through;color:#dc3545;">${escapeHtml(oldTokens[k])}</span>`);
+        oldOut.push(
+          `<span style="text-decoration:line-through;color:#dc3545;">${escapeHtml(oldTokens[k])}</span>`
+        );
       }
     };
     const pushInserted = (start, end) => {
       for (let k = start; k < end; k++) {
-        newOut.push(`<span style="text-decoration:underline;color:#28a745;">${escapeHtml(newTokens[k])}</span>`);
+        newOut.push(
+          `<span style="text-decoration:underline;color:#28a745;">${escapeHtml(newTokens[k])}</span>`
+        );
       }
     };
     const pushUnchanged = (aIdx, bIdx) => {
@@ -1192,7 +1266,10 @@ class DataFetcher {
       }
 
       const index = dataArray.findIndex(
-        (item) => item[this.config.itemKey] === identifier || item.key === identifier || item.actionItem === identifier
+        (item) =>
+          item[this.config.itemKey] === identifier ||
+          item.key === identifier ||
+          item.actionItem === identifier
       );
 
       if (index === -1) {
@@ -1409,5 +1486,130 @@ async function getWordData() {
     fetchWordDataButton.textContent = originalButtonText;
     fetchWordDataButton.style.opacity = "1";
     fetchWordDataButton.style.cursor = "pointer";
+  }
+}
+
+async function getSectionData() {
+  console.log("The button is working perfectly fine for now!");
+
+  const fetchSectionDataButton = document.getElementById("fetchSectionData");
+  const originalButtonText = fetchSectionDataButton.textContent;
+  const environment = localStorage.getItem("selectedEnvironment");
+
+  try {
+    // Disable the button during processing
+    fetchSectionDataButton.disabled = true;
+    fetchSectionDataButton.textContent = "Fetching...";
+    fetchSectionDataButton.style.opacity = "0.6";
+    fetchSectionDataButton.style.cursor = "not-allowed";
+
+    const dealSelect = document.getElementById("dealSelect");
+    const selectedDealName = dealSelect.options[dealSelect.selectedIndex].text;
+    const selectedCategory = document.getElementById("categorySelect").value;
+    const loginResponseDataString = localStorage.getItem("loginResponseData");
+
+    if (!loginResponseDataString) {
+      showMessage("Login data not found", true);
+      return;
+    }
+
+    console.log("Code reached getSectionData()");
+
+    const loginResponseData = JSON.parse(loginResponseDataString);
+    const dealsArray = loginResponseData.userDetails.tenantId || [];
+    const matchedDeal = dealsArray.find((deal) => deal.name === selectedDealName);
+
+    if (!matchedDeal) {
+      showMessage("Could not find matching deal", true);
+      return;
+    }
+
+    const matchedDealSettingUUID = matchedDeal.deal[0].uuid;
+    console.log("Deal UUID to send:", matchedDealSettingUUID);
+
+    // Fetch section data from backend
+    const response = await fetch("http://localhost:3002/getSectionData", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        dealUUID: matchedDealSettingUUID,
+        category: selectedCategory,
+        env: environment,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("API Response Data for section part:", data);
+
+    const items = data?.data;
+    if (!Array.isArray(items) || items.length === 0) {
+      showMessage("No data found in API response", true);
+      return;
+    }
+
+    let itemsProcessed = 0;
+
+    await Word.run(async (context) => {
+      const body = context.document.body;
+
+      for (let i = 0; i < items.length; i++) {
+        const rawText = items[i];
+
+        if (typeof rawText === "string" && rawText.trim()) {
+          let headingText = "";
+          let paragraphText = "";
+
+          // Split into heading | paragraph (if exists)
+          if (rawText.includes("|")) {
+            const [headingPart, paragraphPart] = rawText.split("|").map((p) => p.trim());
+            headingText = headingPart;
+            paragraphText = paragraphPart || "";
+          } else {
+            headingText = rawText.trim();
+          }
+
+          // Insert heading
+          const heading = body.insertParagraph(headingText, Word.InsertLocation.end);
+          heading.styleBuiltIn = Word.Style.heading1;
+          heading.font.bold = true;
+          heading.alignment = Word.Alignment.left;
+
+          // Insert paragraph (if exists)
+          if (paragraphText) {
+            const paragraph = body.insertParagraph(paragraphText, Word.InsertLocation.end);
+            paragraph.styleBuiltIn = Word.Style.normal;
+            paragraph.alignment = Word.Alignment.justified;
+          }
+
+          // Add a page break after each section (except last)
+          if (i < items.length - 1) {
+            body.insertBreak(Word.BreakType.page, Word.InsertLocation.end);
+          }
+
+          itemsProcessed++;
+        }
+      }
+
+      await context.sync();
+
+      if (itemsProcessed > 0) {
+        showMessage(`Data added to Word successfully (${itemsProcessed} items processed)`);
+      } else {
+        showMessage("No valid data found to add to Word document", true);
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching section data:", error);
+    showMessage("Error fetching section data: " + error.message, true);
+  } finally {
+    // Re-enable button
+    fetchSectionDataButton.disabled = false;
+    fetchSectionDataButton.textContent = originalButtonText;
+    fetchSectionDataButton.style.opacity = "1";
+    fetchSectionDataButton.style.cursor = "pointer";
   }
 }
