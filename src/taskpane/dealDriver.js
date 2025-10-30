@@ -1528,7 +1528,7 @@ async function getSectionData() {
     console.log("Deal UUID to send:", matchedDealSettingUUID);
 
     // Fetch section data from backend
-    const response = await fetch("http://localhost:3002/getSectionData", {
+    const response = await fetch("https://dealdriverapi.drapcode.co/getSectionData", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
